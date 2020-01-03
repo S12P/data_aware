@@ -45,7 +45,7 @@ for k in film:
             t = file.readline()
             a,b,c = t.split(",")
             if str(a) in users:
-                final.write(t)
+                final.write(str(k) + "," + str(a) + "," + str(b) + "\n")
 
         except:
             break
