@@ -33,7 +33,7 @@ def RMSE_original(O, P, R):
         """
     
     result = 0
-    for i,j in R:
+    for i,j,_ in R:
         result += (O[i][j] - P[i][j])**2
     return result
 
@@ -49,7 +49,7 @@ def RMSE(M, K, U, S, V, R):
     return res
 
 
-def EM(O, K, R):
+def EM(O, K, R, RR):
     """
         O original matrix
         K k-rate
@@ -84,7 +84,7 @@ def EM(O, K, R):
                         
         x += [step]
         y += [RMSE(O, K, U, S, V, R)]
-        z += [RMSE_original(O, P, R)]
+        z += [RMSE_original(O, P, RR)]
         
     fig, ax = plt.subplots(1, figsize=(8, 6))
 
@@ -94,7 +94,7 @@ def EM(O, K, R):
     # Draw all the lines in the same plot, assigning a label for each one to be
     # shown in the legend
     ax.plot(x, y, color="red", label="RMSE")
-    #ax.plot(x, z, color="green", label="Test RMSE")
+    ax.plot(x, z, color="green", label="Test RMSE")
     ax.legend(loc="upper right", title="", frameon=False)
     #plt.show()
     return P, y, z
@@ -162,7 +162,7 @@ def IIS(M, R): #item-item similarity based recommender
     return W
 
 
-def EM2(O, K, R):
+def EM2(O, K, R, RR):
     """
     O original matrix
     K k-rate
@@ -199,7 +199,7 @@ def EM2(O, K, R):
         
         x += [step]
         y += [RMSE(O, K, U, S, V, R)]
-        z += [RMSE_original(O, P, R)]
+        z += [RMSE_original(O, P, RR)]
     fig, ax = plt.subplots(1, figsize=(8, 6))
 
     # Set the title for the figure
@@ -208,7 +208,7 @@ def EM2(O, K, R):
     # Draw all the lines in the same plot, assigning a label for each one to be
     # shown in the legend
     ax.plot(x, y, color="red", label="RMSE")
-    #ax.plot(x, z, color="green", label="Test RMSE")
+    ax.plot(x, z, color="green", label="Test RMSE")
     ax.legend(loc="upper right", title="", frameon=False)
     #plt.show()
     return P, y, z
@@ -222,9 +222,9 @@ Ori, _, _ = test.train_matrix(0)
 Ori = np.array(Ori)
 Ori = Ori.astype(float)
 
-W, x1, y1 = EM(M, K, R)
+W, x1, y1 = EM(M, K, R, test_values)
 
-W, x2, y2 = EM2(M.T, K, R)
+W, x2, y2 = EM2(M.T, K, R, test_values)
 
 x = [k for k in range(60)]
 
@@ -236,10 +236,10 @@ fig.suptitle('EM ', fontsize=15)
 # Draw all the lines in the same plot, assigning a label for each one to be
 # shown in the legend
 ax.plot(x, x1, color="red", label="EM RMSE")
-#ax.plot(x, y1, color="green", label="EM Test RMSE")
+ax.plot(x, y1, color="green", label="EM Test RMSE")
 
 ax.plot(x, x2, color="blue", label="EM2 RMSE")
-#ax.plot(x, y2, color="yellow", label="EM2 Test RMSE")
+ax.plot(x, y2, color="yellow", label="EM2 Test RMSE")
 ax.legend(loc="upper right", title="", frameon=False)
 plt.show()
 
