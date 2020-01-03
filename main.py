@@ -103,36 +103,45 @@ def mean_user(M):
         m[i] = mean
     return m
 
-def similarity(MM):
-    M = np.copy(MM.T) # pour avoir les films en ligne
+def similarity(M, mean):
+    #todo a ameliorer
+    #M = np.copy(MM.T) # pour avoir les films en ligne
     I, J = np.shape(M)
     sim = np.array([[0 for j in range(I)] for i in range(I)])
-    for i in range(I):
-        for j in range(I):
-            if i != j:
-                nI = np.sqrt(np.dot(M[i], M[i]))
-                nJ = np.sqrt(np.dot(M[j], M[j]))
-                sim[i][i] = (np.dot(M[i], M[j])) / (nI * nJ)
-            else:
-                sim[i][i] = 1
+    for i in range(J):
+        for j in range(J):
+            array_user = []
+            for user in range(I):
+                if M[user][i] != 0 and M[user][j] != 0:
+                    array_user += [user]
+            a = 0
+            b = 0
+            c = 0
+            for k in range(len(array_user)): # a/(b*c)
+                u = array_user[k]
+                a += (M[u][i] - mean[u])*(M[u][j] - mean[u])
+                b += (M[u][i] - mean[u])**2
+                c += (M[u][j] - mean[u])**2
+                print(a,b,c, M[u][i], M[u][j], mean[j])
+            sim[i][j] = a / (np.sqrt(b) * np.sqrt(c))
+            
     return sim
 
 
 def IIS(M, R): #item-item similarity based recommender
     I, J = np.shape(M)
     mean = mean_user(M)
-    S = similarity(M)
+    S = similarity(M, mean)
     F = np.array([[0 for j in range(J)] for i in range(I)])
     W = np.array([[0 for j in range(J)] for i in range(I)])
     H = np.array([[mean[i] for j in range(J)] for i in range(I)])
+    for i,j in R:
+        F[i][j] = (M[i][j] - mean[i]) / 100.
+    FS = np.dot(F, S)
     for i in range(I):
         for j in range(J):
-            if (i, j) in R:
-                F[i][j] = (M[i][j] - mean[i]) / 100.
-    for i in range(I):
-        for j in range(J):
-            if (i, j) in R:
-                W[i][j] = H[i][j] + np.dot(F, S)[i][j]
+            if (i, j) not in R:
+                W[i][j] = H[i][j] + FS[i][j]
     return W
 
 
@@ -187,5 +196,5 @@ M = M.astype(float)
 Ori, _, _ = test.train_matrix(0)
 Ori = np.array(Ori)
 Ori = Ori.astype(float)
-W = EM2(M, 10, R)
+W = EM2(M, 70, R)
 print(RMSE_original(Ori, W, R))
