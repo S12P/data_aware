@@ -7,7 +7,7 @@ dic = defaultdict(lambda : 0)
 
 film = []
 while True:
-    if len(film) == 1000:
+    if len(film) == 100:
         break
     b = randint(1, 17770)
     if  b not in film:
@@ -29,7 +29,7 @@ for k in film:
     file.close()
     
 #film = list(map(str, film))
-users = list(dict(sorted(dic.items(), key=lambda item: -item[1])).keys())[:1000000]
+users = list(dict(sorted(dic.items(), key=lambda item: -item[1])).keys())[:100]
 
 #print(users)
 #print()
