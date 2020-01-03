@@ -14,7 +14,7 @@ def rank_k(U, S, V, K):
 def SVD_k(m, K):
     U, S_, V = SVD_(m)
     
-    U, S_, V = rank_k(U, S_, V, K)
+    U, S_, V = rank_k(U.T, S_, V, K)
     
     U = U.T
     
@@ -40,15 +40,14 @@ def RMSE_original(O, P):
     return result
     
                 
-def RMSE(M, K, U, S, V):
+def RMSE(M, K, U, S, V, R):
     res = 0
     I, J = np.shape(M)
-    for i in range(I):
-        for j in range(J):
-            err = M[i][j]
-            for k in range(K):
-                err -= S[k][k] * U[i][k] * V[k][j] #checker si cest bon pr indice de U
-            res += err**2
+    for i, j in R:
+        err = M[i][j]
+        for k in range(K):
+            err -= S[k][k] * U[i][k] * V[k][j] #checker si cest bon pr indice de U
+        res += err**2
     return res
     
     
@@ -80,9 +79,10 @@ def EM(O, K, R):
                 if (i, j) in R:
                     P[i][j] = O[i][j]
                 else:
+                    
                     P[i][j] = SVD[i][j]
                     
-        print(RMSE(M, K, U, S, V))
+        print(RMSE(M, K, U, S, V, R))
     return P
                 
 ####################################################
@@ -138,20 +138,20 @@ def IIS(M, R): #item-item similarity based recommender
                 
     
     
-#M, test_values, R = test.train_matrix(.10)
-#M = np.array(M)
-#M = M.astype(float)
-#Ori, _, _ = test.train_matrix(0)
-#Ori = np.array(Ori)
-#Ori = Ori.astype(float)
-#W = EM(M, 50, R)
-#print(RMSE_original(Ori, W))
-
 M, test_values, R = test.train_matrix(.10)
-M = np.array(M).T #transposé ici
+M = np.array(M)
 M = M.astype(float)
 Ori, _, _ = test.train_matrix(0)
 Ori = np.array(Ori)
 Ori = Ori.astype(float)
-W = IIS(M, R)
+W = EM(M, 10, R)
 print(RMSE_original(Ori, W))
+
+#M, test_values, R = test.train_matrix(.10)
+#M = np.array(M).T #transposé ici
+#M = M.astype(float)
+#Ori, _, _ = test.train_matrix(0)
+#Ori = np.array(Ori)
+#Ori = Ori.astype(float)
+#W = IIS(M, R)
+#print(RMSE_original(Ori, W))
