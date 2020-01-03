@@ -34,6 +34,7 @@ def RMSE_original(O, P, R):
     
     result = 0
     for i,j,_ in R:
+        #print(i,j)
         result += (O[i][j] - P[i][j])**2
     return result
 
@@ -138,10 +139,8 @@ def similarity(M, mean):
                 b += (M[u][i] - mean[u])**2
                 c += (M[u][j] - mean[u])**2
             #print(a,b,c)
-            if len(array_user) != 0:
+            if len(array_user) != 0 and b != 0 and c != 0:
                 sim[i][j] = a / (np.sqrt(b) * np.sqrt(c))
-            else:
-                sim[i][j] = 0
     return sim
 
 
@@ -149,8 +148,8 @@ def IIS(M, R): #item-item similarity based recommender
     I, J = np.shape(M)
     mean = mean_user(M)
     S = similarity(M, mean)
-    F = np.array([[0 for j in range(J)] for i in range(I)])
-    W = np.array([[0 for j in range(J)] for i in range(I)])
+    F = np.array([[0. for j in range(J)] for i in range(I)])
+    W = np.array([[0. for j in range(J)] for i in range(I)])
     H = np.array([[mean[i] for j in range(J)] for i in range(I)])
     for i,j in R:
         F[i][j] = (M[i][j] - mean[i]) / 100.
@@ -171,6 +170,10 @@ def EM2(O, K, R, RR):
     """
     I, J = np.shape(O)
     P = IIS(O.T, R).T
+    
+    print(O)
+    
+    print(P)
     
     x = []
     y = []
@@ -224,7 +227,7 @@ Ori = Ori.astype(float)
 
 W, x1, y1 = EM(M, K, R, test_values)
 
-W, x2, y2 = EM2(M.T, K, R, test_values)
+W, x2, y2 = EM2(M, K, R, test_values)
 
 x = [k for k in range(60)]
 
