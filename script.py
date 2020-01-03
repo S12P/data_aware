@@ -31,12 +31,18 @@ for k in film:
 #film = list(map(str, film))
 users = list(dict(sorted(dic.items(), key=lambda item: -item[1])).keys())[:100]
 
-#print(users)
+dic_user = {}
+
+for k in range(len(users)):
+    dic_user[users[k]] = k
+
+#print(dic_user, len(dic_user))
 #print()
 #print(film)
 
 final = open("matrix.txt", "w")
 #print(film)
+count = 0
 for k in film:
     file = open("/Users/stephane/Desktop/download/training_set/mv_{:07}.txt".format(k), "r")
     file.readline()
@@ -45,10 +51,11 @@ for k in film:
             t = file.readline()
             a,b,c = t.split(",")
             if str(a) in users:
-                final.write(str(k) + "," + str(a) + "," + str(b) + "\n") # film, user, note
+                final.write(str(count) + "," + str(dic_user[a]) + "," + str(b) + "\n") # film, user, note
 
         except:
             break
+    count += 1
     file.close()
 final.close()
 
