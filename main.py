@@ -13,7 +13,7 @@ def RMSE(M, SVD_sigma, SVD_u, SVD_v):
             err = M[i][j]
             for k in range(len(SVD_sigma)):
                 err -= SVD_sigma[k] * SVD_u[k][i] * SVD_v[k][j] #checker si cest bon
-            res += err
+            res += err**2
     return res
     
 
