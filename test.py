@@ -1,18 +1,28 @@
 # Generate test and training sets
-from math import randint, floor
+from math import floor
+from random import randint
 
 
-def generate_test(alpha, nbvalues):
+def generate_test(alpha, nbvalues, path='./data/test_set'):
     test_size = floor(alpha * nbvalues)
 
-    test_set = {}
+    test_set = set()
 
-    with open('./data/test_set') as test_file:
+    with open(path, 'w') as test_file:
         while len(test_set) < test_size:
-            test_value = randint(nbvalues)
+            test_value = randint(0, nbvalues)
             if test_value not in test_set:
-                test_file.write('%d\n', test_value)
+                test_file.write('%d\n' % test_value)
             test_set.add(test_value)
+    return test_set
+
+
+def read_test(path='./data/test_set'):
+    test_set = set()
+    with open(path, 'r') as test_file:
+        test_set.add(int(test_file.readline()))
+
+    return test_set
 
 
 def train_matrix_from_file(path, sep=',', test_set={}):
@@ -44,14 +54,21 @@ def train_matrix_from_file(path, sep=',', test_set={}):
         matrix = [[0 for _ in range(columns)] for _ in range(lines)]
         test_entries = []
 
-        for (entry, n) in enumerate(fd.readlines()):
+        for (n, entry) in enumerate(fd.readlines()):
             # If the entry corresponds to a training value,
             # add it to the test_entries vector and leave matrix value
             # untouched
+            movie_id, user_id, rating = (int(x) for x in entry.split(sep))
             if n not in test_set:
-                movie_id, user_id, rating = (int(x) for x in entry.split(sep))
                 matrix[movie_id][user_id] = rating
             else:
                 test_entries.append((movie_id, user_id, rating))
 
     return matrix, test_entries
+
+
+def train_matrix(alpha, path='./data/matrix.txt', sep=','):
+    with open(path, 'r') as fd:
+        _, _, nbvalues = (int(x) for x in fd.readline().split(sep))
+        test_set = generate_test(alpha, nbvalues)
+    return train_matrix_from_file(path, test_set=test_set)
