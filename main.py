@@ -123,7 +123,7 @@ def similarity(M, mean):
     #todo a ameliorer
     #M = np.copy(MM.T) # pour avoir les films en ligne
     I, J = np.shape(M)
-    sim = np.array([[0 for j in range(I)] for i in range(I)])
+    sim = np.array([[0. for j in range(I)] for i in range(I)])
     for i in range(J):
         for j in range(J):
             array_user = []
@@ -217,7 +217,7 @@ def EM2(O, K, R, RR):
     return P, y, z
 
 
-K = 20
+K = 10
 M, test_values, R = test.train_matrix(.10)
 M = np.array(M)
 M = M.astype(float)
