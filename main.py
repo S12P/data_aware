@@ -1,5 +1,6 @@
 import numpy as np
 import test
+import matplotlib.pyplot as plt
 
 
 def SVD_(m):
@@ -30,8 +31,6 @@ def RMSE_original(O, P, R):
         - O actual rating
         - P prediction
         """
-    assert(len(O) == len(P))
-    assert(len(O[0]) == len(P[0]))
     
     result = 0
     for i,j in R:
@@ -59,7 +58,9 @@ def EM(O, K, R):
         """
     I, J = np.shape(O)
     P = np.array([[0. for j in range(J)] for i in range(I)])
-    
+    x = []
+    y = []
+    z = []
     U, S, V = SVD_k(O, K)
     SVD = np.dot(np.dot(U, S), V)
     for i in range(I):
@@ -69,7 +70,7 @@ def EM(O, K, R):
             else:
                 P[i][j] = SVD[i][j]
                     
-    for step in range(100):
+    for step in range(60):
         U, S, V = SVD_k(P, K)
         SVD = np.dot(np.dot(U, S), V)
 
@@ -81,8 +82,22 @@ def EM(O, K, R):
                     
                     P[i][j] = SVD[i][j]
                         
-        print(RMSE(M, K, U, S, V, R))
-    return P
+        x += [step]
+        y += [RMSE(O, K, U, S, V, R)]
+        z += [RMSE_original(O, P, R)]
+        
+    fig, ax = plt.subplots(1, figsize=(8, 6))
+
+    # Set the title for the figure
+    fig.suptitle('EM ', fontsize=15)
+
+    # Draw all the lines in the same plot, assigning a label for each one to be
+    # shown in the legend
+    ax.plot(x, y, color="red", label="RMSE")
+    #ax.plot(x, z, color="green", label="Test RMSE")
+    ax.legend(loc="upper right", title="", frameon=False)
+    #plt.show()
+    return P, y, z
                     
 ####################################################
 
@@ -122,9 +137,11 @@ def similarity(M, mean):
                 a += (M[u][i] - mean[u])*(M[u][j] - mean[u])
                 b += (M[u][i] - mean[u])**2
                 c += (M[u][j] - mean[u])**2
-                print(a,b,c, M[u][i], M[u][j], mean[j])
-            sim[i][j] = a / (np.sqrt(b) * np.sqrt(c))
-            
+            #print(a,b,c)
+            if len(array_user) != 0:
+                sim[i][j] = a / (np.sqrt(b) * np.sqrt(c))
+            else:
+                sim[i][j] = 0
     return sim
 
 
@@ -155,6 +172,10 @@ def EM2(O, K, R):
     I, J = np.shape(O)
     P = IIS(O.T, R).T
     
+    x = []
+    y = []
+    z = []
+    
     U, S, V = SVD_k(O, K)
     SVD = np.dot(np.dot(U, S), V)
     for i in range(I):
@@ -164,7 +185,7 @@ def EM2(O, K, R):
             else:
                 P[i][j] = SVD[i][j]
     
-    for step in range(100):
+    for step in range(60):
         U, S, V = SVD_k(P, K)
         SVD = np.dot(np.dot(U, S), V)
         
@@ -176,25 +197,49 @@ def EM2(O, K, R):
                     
                     P[i][j] = SVD[i][j]
         
-        print(RMSE(M, K, U, S, V, R))
-    return P
+        x += [step]
+        y += [RMSE(O, K, U, S, V, R)]
+        z += [RMSE_original(O, P, R)]
+    fig, ax = plt.subplots(1, figsize=(8, 6))
+
+    # Set the title for the figure
+    fig.suptitle('EM2 ', fontsize=15)
+
+    # Draw all the lines in the same plot, assigning a label for each one to be
+    # shown in the legend
+    ax.plot(x, y, color="red", label="RMSE")
+    #ax.plot(x, z, color="green", label="Test RMSE")
+    ax.legend(loc="upper right", title="", frameon=False)
+    #plt.show()
+    return P, y, z
 
 
-
-#M, test_values, R = test.train_matrix(.10)
-#M = np.array(M)
-#M = M.astype(float)
-#Ori, _, _ = test.train_matrix(0)
-#Ori = np.array(Ori)
-#Ori = Ori.astype(float)
-#W = EM(M, 10, R)
-#print(RMSE_original(Ori, W))
-
+K = 20
 M, test_values, R = test.train_matrix(.10)
-M = np.array(M).T #transposé ici
+M = np.array(M)
 M = M.astype(float)
 Ori, _, _ = test.train_matrix(0)
 Ori = np.array(Ori)
 Ori = Ori.astype(float)
-W = EM2(M, 70, R)
-print(RMSE_original(Ori, W, R))
+
+W, x1, y1 = EM(M, K, R)
+
+W, x2, y2 = EM2(M.T, K, R)
+
+x = [k for k in range(60)]
+
+fig, ax = plt.subplots(1, figsize=(8, 6))
+
+# Set the title for the figure
+fig.suptitle('EM ', fontsize=15)
+
+# Draw all the lines in the same plot, assigning a label for each one to be
+# shown in the legend
+ax.plot(x, x1, color="red", label="EM RMSE")
+#ax.plot(x, y1, color="green", label="EM Test RMSE")
+
+ax.plot(x, x2, color="blue", label="EM2 RMSE")
+#ax.plot(x, y2, color="yellow", label="EM2 Test RMSE")
+ax.legend(loc="upper right", title="", frameon=False)
+plt.show()
+
