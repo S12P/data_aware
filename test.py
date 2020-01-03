@@ -5,7 +5,6 @@ from random import randint
 
 def generate_test(alpha, nbvalues, path='./data/test_set'):
     test_size = floor(alpha * nbvalues)
-
     test_set = set()
 
     with open(path, 'w') as test_file:
@@ -19,6 +18,7 @@ def generate_test(alpha, nbvalues, path='./data/test_set'):
 
 def read_test(path='./data/test_set'):
     test_set = set()
+
     with open(path, 'r') as test_file:
         test_set.add(int(test_file.readline()))
 
@@ -61,8 +61,10 @@ def train_matrix_from_file(path, sep=',', test_set={}):
 
         for (n, entry) in enumerate(fd.readlines()):
             # If the entry corresponds to a training value,
-            # add it to the test_entries vector and leave matrix value
-            # untouched
+            # add it to the @test_entries vector and leave matrix value
+            # untouched. Else add the coordinates of the value to the
+            # @values vector and set the according matrix entry to
+            # the value.
             movie_id, user_id, rating = (int(x) for x in entry.split(sep))
             if n not in test_set:
                 matrix[movie_id][user_id] = rating
@@ -84,7 +86,9 @@ def train_matrix(alpha, path='./data/matrix.txt', sep=','):
         is, the matrix described at @path minus the @test_values.
         @values contains coordinates of the non-test values.
     """
+
     with open(path, 'r') as fd:
         _, _, nbvalues = (int(x) for x in fd.readline().split(sep))
         test_set = generate_test(alpha, nbvalues)
+
     return train_matrix_from_file(path, test_set=test_set)
