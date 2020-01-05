@@ -34,16 +34,16 @@ def SVD_k(m, K):
         S[k][k] = S_[k]
     return U, S, V
 
-def RMSE_original(O, P, R):
+def RMSE_original(M, P, R):
     """
         Input:
-        - O actual rating
+        - M actual rating
         - P prediction
     """
 
     result = 0
     for i,j,_ in R:
-        result += (O[i][j] - P[i][j])**2
+        result += (M[i][j] - P[i][j])**2
     return result
 
 
@@ -67,9 +67,9 @@ def RMSE(M, K, U, S, V, R):
     return res
 
 
-def EM(O, K, TS, DV, Ori):
+def EM(M, K, TS, DV, Ori):
     """
-        O matrix
+        M matrix
         K k-rate
         TS training set
         DV delete values
@@ -78,7 +78,7 @@ def EM(O, K, TS, DV, Ori):
         Here we use expectation maximisation and we initialize values to 0
 
     """
-    I, J = np.shape(O)
+    I, J = np.shape(M)
     P = np.array([[0. for j in range(J)] for i in range(I)])
 
     x = []
@@ -92,13 +92,13 @@ def EM(O, K, TS, DV, Ori):
         for i in range(I):
             for j in range(J):
                 if (i, j) in TS:
-                    P[i][j] = O[i][j]
+                    P[i][j] = M[i][j]
                 else:
 
                     P[i][j] = SVD[i][j]
 
         x += [step]
-        y += [RMSE(O, K, U, S, V, TS)]
+        y += [RMSE(M, K, U, S, V, TS)]
         z += [RMSE_original(Ori, P, DV)]
 
     fig, ax = plt.subplots(1, figsize=(8, 6))
@@ -175,9 +175,9 @@ def IIS(M, R): #item-item similarity based recommender
     return W
 
 
-def EM2(O, K, TS, DV, Ori):
+def EM2(M, K, TS, DV, Ori):
     """
-    O matrix
+    M matrix
     K k-rate
     TS training set
     DV delete values
@@ -185,8 +185,8 @@ def EM2(O, K, TS, DV, Ori):
 
     Here we use expectation maximisation and we initialize values with item-item similarity based recommender
     """
-    I, J = np.shape(O)
-    P = IIS(O.T, R).T #because our function ISS use the tranpose
+    I, J = np.shape(M)
+    P = IIS(M.T, R).T #because our function ISS use the tranpose
 
     x = []
     y = []
@@ -199,13 +199,13 @@ def EM2(O, K, TS, DV, Ori):
         for i in range(I):
             for j in range(J):
                 if (i, j) in TS:
-                    P[i][j] = O[i][j]
+                    P[i][j] = M[i][j]
                 else:
 
                     P[i][j] = SVD[i][j]
 
         x += [step]
-        y += [RMSE(O, K, U, S, V, TS)]
+        y += [RMSE(M, K, U, S, V, TS)]
         z += [RMSE_original(Ori, P, DV)]
     fig, ax = plt.subplots(1, figsize=(8, 6))
 
