@@ -4,23 +4,32 @@ import matplotlib.pyplot as plt
 
 
 def SVD_(m):
+    """
+        SVD function
+    """
     return np.linalg.svd(m, full_matrices=False)
 
 def rank_k(U, S, V, K):
+    """
+        function which return U, S and V with K-rank
+    """
     U_ = np.copy(U[:K])
     S_ = np.copy(S[:K])
     V_ = np.copy(V[:K])
     return (U_, S_, V_)
 
 def SVD_k(m, K):
+    """
+        function wich return U, S, V from SVD algorithm with K-rank
+    """
     U, S_, V = SVD_(m)
-    
+
     U, S_, V = rank_k(U.T, S_, V, K)
-    
+
     U = U.T
-    
+
     S = np.array([[0. for j in range(K)] for i in range(K)])
-    
+
     for k in range(K):
         S[k][k] = S_[k]
     return U, S, V
@@ -30,63 +39,68 @@ def RMSE_original(O, P, R):
         Input:
         - O actual rating
         - P prediction
-        """
-    
+    """
+
     result = 0
     for i,j,_ in R:
-        #print(i,j)
         result += (O[i][j] - P[i][j])**2
     return result
 
 
 def RMSE(M, K, U, S, V, R):
+    """
+        RMSE training
+
+        Input:
+            - U, S, V from SVD
+            - M original matrix
+            - K K-rank
+            - R the positions of values in M
+    """
     res = 0
     I, J = np.shape(M)
     for i, j in R:
         err = M[i][j]
         for k in range(K):
-            err -= S[k][k] * U[i][k] * V[k][j] #checker si cest bon pr indice de U
+            err -= S[k][k] * U[i][k] * V[k][j]
         res += err**2
     return res
 
 
-def EM(O, K, R, RR):
+def EM(O, K, TS, DV, Ori):
     """
-        O original matrix
+        O matrix
         K k-rate
-        R training set
-        
-        """
+        TS training set
+        DV delete values
+        Ori original matrix
+
+        Here we use expectation maximisation and we initialize values to 0
+
+    """
     I, J = np.shape(O)
     P = np.array([[0. for j in range(J)] for i in range(I)])
+
     x = []
     y = []
     z = []
-    U, S, V = SVD_k(O, K)
-    SVD = np.dot(np.dot(U, S), V)
-    for i in range(I):
-        for j in range(J):
-            if (i, j) in R:
-                P[i][j] = O[i][j]
-            else:
-                P[i][j] = SVD[i][j]
-                    
+
     for step in range(60):
         U, S, V = SVD_k(P, K)
         SVD = np.dot(np.dot(U, S), V)
 
         for i in range(I):
             for j in range(J):
-                if (i, j) in R:
+                if (i, j) in TS:
                     P[i][j] = O[i][j]
                 else:
-                    
+
                     P[i][j] = SVD[i][j]
-                        
+
         x += [step]
-        y += [RMSE(O, K, U, S, V, R)]
-        z += [RMSE_original(O, P, RR)]
-        
+        y += [RMSE(O, K, U, S, V, TS)]
+        z += [RMSE_original(Ori, P, DV)]
+
     fig, ax = plt.subplots(1, figsize=(8, 6))
 
     # Set the title for the figure
@@ -97,15 +111,12 @@ def EM(O, K, R, RR):
     ax.plot(x, y, color="red", label="RMSE")
     ax.plot(x, z, color="green", label="Test RMSE")
     ax.legend(loc="upper right", title="", frameon=False)
-    #plt.show()
     return P, y, z
-                    
-####################################################
-
-# ligne user
-# colonne film
 
 def mean_user(M):
+    """
+        return an array with the mean of each user
+    """
     I, J = np.shape(M)
     m = np.zeros(I) #array of mean
     for i in range(I):
@@ -120,8 +131,9 @@ def mean_user(M):
     return m
 
 def similarity(M, mean):
-    #todo a ameliorer
-    #M = np.copy(MM.T) # pour avoir les films en ligne
+    """
+        We use the similarity algorithm from the article Item-Based Collaborative Filtering Recommendation Algorithms (http://files.grouplens.org/papers/www10_sarwar.pdf)
+    """
     I, J = np.shape(M)
     sim = np.array([[0. for j in range(I)] for i in range(I)])
     for i in range(J):
@@ -138,13 +150,15 @@ def similarity(M, mean):
                 a += (M[u][i] - mean[u])*(M[u][j] - mean[u])
                 b += (M[u][i] - mean[u])**2
                 c += (M[u][j] - mean[u])**2
-            #print(a,b,c)
             if len(array_user) != 0 and b != 0 and c != 0:
                 sim[i][j] = a / (np.sqrt(b) * np.sqrt(c))
     return sim
 
 
 def IIS(M, R): #item-item similarity based recommender
+    """
+        This algortihm init none values in the matrix
+    """
     I, J = np.shape(M)
     mean = mean_user(M)
     S = similarity(M, mean)
@@ -161,48 +175,38 @@ def IIS(M, R): #item-item similarity based recommender
     return W
 
 
-def EM2(O, K, R, RR):
+def EM2(O, K, TS, DV, Ori):
     """
-    O original matrix
+    O matrix
     K k-rate
-    R training set
-    
+    TS training set
+    DV delete values
+    Ori original matrix
+
+    Here we use expectation maximisation and we initialize values with item-item similarity based recommender
     """
     I, J = np.shape(O)
-    P = IIS(O.T, R).T
-    
-    print(O)
-    
-    print(P)
-    
+    P = IIS(O.T, R).T #because our function ISS use the tranpose
+
     x = []
     y = []
     z = []
-    
-    U, S, V = SVD_k(O, K)
-    SVD = np.dot(np.dot(U, S), V)
-    for i in range(I):
-        for j in range(J):
-            if (i, j) in R:
-                P[i][j] = O[i][j]
-            else:
-                P[i][j] = SVD[i][j]
-    
+
     for step in range(60):
         U, S, V = SVD_k(P, K)
         SVD = np.dot(np.dot(U, S), V)
-        
+
         for i in range(I):
             for j in range(J):
-                if (i, j) in R:
+                if (i, j) in TS:
                     P[i][j] = O[i][j]
                 else:
-                    
+
                     P[i][j] = SVD[i][j]
-        
+
         x += [step]
-        y += [RMSE(O, K, U, S, V, R)]
-        z += [RMSE_original(O, P, RR)]
+        y += [RMSE(O, K, U, S, V, TS)]
+        z += [RMSE_original(Ori, P, DV)]
     fig, ax = plt.subplots(1, figsize=(8, 6))
 
     # Set the title for the figure
@@ -213,28 +217,27 @@ def EM2(O, K, R, RR):
     ax.plot(x, y, color="red", label="RMSE")
     ax.plot(x, z, color="green", label="Test RMSE")
     ax.legend(loc="upper right", title="", frameon=False)
-    #plt.show()
     return P, y, z
 
 
-K = 10
-M, test_values, R = test.train_matrix(.10)
+K = 20
+M, test_values, R = test.train_matrix(.30)
 M = np.array(M)
 M = M.astype(float)
 Ori, _, _ = test.train_matrix(0)
 Ori = np.array(Ori)
 Ori = Ori.astype(float)
 
-W, x1, y1 = EM(M, K, R, test_values)
+W1, x1, y1 = EM(M, K, R, test_values, Ori)
 
-W, x2, y2 = EM2(M, K, R, test_values)
+W2, x2, y2 = EM2(M, K, R, test_values, Ori)
 
 x = [k for k in range(60)]
 
 fig, ax = plt.subplots(1, figsize=(8, 6))
 
 # Set the title for the figure
-fig.suptitle('EM ', fontsize=15)
+fig.suptitle('EM && EM2 ', fontsize=15)
 
 # Draw all the lines in the same plot, assigning a label for each one to be
 # shown in the legend
@@ -245,4 +248,3 @@ ax.plot(x, x2, color="blue", label="EM2 RMSE")
 ax.plot(x, y2, color="yellow", label="EM2 Test RMSE")
 ax.legend(loc="upper right", title="", frameon=False)
 plt.show()
-
